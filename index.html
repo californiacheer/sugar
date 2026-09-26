@@ -2256,6 +2256,37 @@ document.getElementById('tabs').addEventListener('click', (e)=>{
   setTimeout(updateArrows, 300);
 })();
 
+// ---------- BOTTOM NAV: LOCK TO THE REAL VISIBLE SCREEN ----------
+// position:fixed alone can visibly lag for a frame while a mobile browser's
+// address bar animates in or out — the browser resizes the fixed element's
+// containing block mid-scroll, and the bar's own paint updates fastest.
+// window.visualViewport reports the ACTUAL visible area in real time
+// (updated continuously as the toolbar animates), so it's measured directly
+// and the nav's position is locked with a transform every time it changes —
+// removing any dependency on vh/dvh math or the browser's own fixed-position
+// timing, which is what let the bar visibly jump or lag before.
+(function(){
+  const nav = document.querySelector('.navbar-wrap');
+  if(!nav || !window.visualViewport) return;
+  const vv = window.visualViewport;
+  let ticking = false;
+  function apply(){
+    ticking = false;
+    if(window.innerWidth > 760){ nav.style.transform = ''; return; }
+    const gap = window.innerHeight - (vv.height + vv.offsetTop);
+    nav.style.transform = gap > 0.5 ? `translateY(-${gap}px)` : '';
+  }
+  function schedule(){
+    if(ticking) return;
+    ticking = true;
+    requestAnimationFrame(apply);
+  }
+  vv.addEventListener('resize', schedule);
+  vv.addEventListener('scroll', schedule);
+  window.addEventListener('resize', schedule);
+  apply();
+})();
+
 renderHero();
 renderFeed();
 renderUpcomingEvents();
