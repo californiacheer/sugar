@@ -2172,6 +2172,7 @@ document.getElementById('tabs').addEventListener('click', (e)=>{
   btn.classList.add('active');
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  window.scrollTo(0, 0);
   btn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
 });
 
