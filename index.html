@@ -1117,6 +1117,9 @@ html.pinkout .hero-countdown{border-color:rgba(207,42,119,.35);}
 html.pinkout .countdown{color:#cf2a77;}
 html.pinkout .countdown-label{color:#8a1450;}
 html.pinkout .hero-card.primary{border-color:#8a1450;box-shadow:0 8px 0 #8a1450,0 18px 30px rgba(190,40,115,.25);}
+
+/* iOS zooms the whole page when a field under 16px gets focus - keep every field at 16px on phones */
+@media (max-width:760px){ input:not([type=checkbox]):not([type=radio]), select, textarea{ font-size:16px !important; } }
 </style>
 </head>
 <body>
@@ -1491,7 +1494,7 @@ const feed = [
 ];
 
 const fundraisers = [
-  {emoji:"💙", title:"Support Coach Marlon", date:"2026-09-21", logo:true, badgeType:"fundraiser", badgeLabel:"Fundraiser", meta:'Longtime CALI coach/choreographer Marlon Biete is in the ICU after a medical emergency in England. CALI and Unity All Stars are asking the cheer community to help cover medical, travel, and recovery costs. <a href="https://u888spyab.cc.rs6.net/tn.jsp?f=001IMIA87EXLHJQ7WT2m8oX0EJ-029YRypBtQolAXW5NGNz7HIob9VUtn0Izv3vzpk8V83ybPvZpoes-6T-pMb9_aDDz3tdZ7XcEZ4nWAixyMkBwd0o7pnbgNyeOw67ch2D3OhyxAbMx9glSllrSprvw2KyteE4oe9C&c=ZhSapUrGW5M09_103-zFGMNeJxZWWJFRLOpMRaDdthw-aeEQ9rxYYQ==&ch=bPwDEj4y0b5qmsYFLv65mxgznZ5KGRHdWok29GGDKDaqIfDk8yniZA==" target="_blank">Donate on GoFundMe →</a>'},
+  {emoji:"💙", title:"Support Coach Marlon", last:true, date:"2026-09-21", logo:true, badgeType:"fundraiser", badgeLabel:"Fundraiser", meta:'Longtime CALI coach/choreographer Marlon Biete is in the ICU after a medical emergency in England. CALI and Unity All Stars are asking the cheer community to help cover medical, travel, and recovery costs. <a href="https://u888spyab.cc.rs6.net/tn.jsp?f=001IMIA87EXLHJQ7WT2m8oX0EJ-029YRypBtQolAXW5NGNz7HIob9VUtn0Izv3vzpk8V83ybPvZpoes-6T-pMb9_aDDz3tdZ7XcEZ4nWAixyMkBwd0o7pnbgNyeOw67ch2D3OhyxAbMx9glSllrSprvw2KyteE4oe9C&c=ZhSapUrGW5M09_103-zFGMNeJxZWWJFRLOpMRaDdthw-aeEQ9rxYYQ==&ch=bPwDEj4y0b5qmsYFLv65mxgznZ5KGRHdWok29GGDKDaqIfDk8yniZA==" target="_blank">Donate on GoFundMe →</a>'},
   {emoji:"🎬", title:"Sparkle Movie Night", date:"2026-09-12", end:"2026-09-12", meta:"Sat, Sep 12, 2026 · doors 7:00p, movie 7:45p, pickup 9:30p · $10/person (incl. popcorn), concessions $1–2 · Cali Gym parking lot", extra:"Showing: Bring It On",
     pay:["Cash at the door","Zelle: 562-240-3450 (Karin)","Venmo: search \"Karin\" — confirm exact @handle in team chat"]},
   {emoji:"🤸", title:"Rangers Stunt Clinic", date:"2026-09-19", end:"2026-09-19", meta:"Sat, Sep 19, 2026 · 5:00–7:00 PM · $55/person · Partner stunting, double base stunts, group stunts &amp; flexibility — open to all levels and ages, bases and flyers.", extra:"Email didi@californiaallstars.com to sign up"},
@@ -2087,7 +2090,7 @@ function renderOpenGym(){
 function renderFundraisers(){
   const now = new Date(); now.setHours(0,0,0,0);
   const active = fundraisers.filter(f=>!f.end || new Date(f.end+"T00:00:00")>=now)
-    .sort((a,b)=>new Date(a.date||a.end)-new Date(b.date||b.end));
+    .sort((a,b)=>((a.last?1:0)-(b.last?1:0)) || (new Date(a.date||a.end)-new Date(b.date||b.end)));
   const list = document.getElementById('fundList');
   if(active.length===0){
     list.innerHTML = `<p style="margin:0;font-size:13.5px;color:var(--text-muted);">No active fundraisers right now — check back or ask in team chat.</p>`;
@@ -2410,11 +2413,18 @@ document.getElementById('calGrid').addEventListener('click', (e)=>{
   const dayTitle = document.getElementById('calSelectedDayTitle');
   if(dayTitle) requestAnimationFrame(()=> dayTitle.scrollIntoView({behavior:'smooth', block:'start'}));
 });
+function scrollCalendarTop(){
+  window.scrollTo({top:0, behavior:'smooth'});
+  const sc = document.querySelector('.app-scroll'); if(sc && sc.scrollTo) sc.scrollTo({top:0, behavior:'smooth'});
+}
 document.getElementById('calAddBtn').addEventListener('click', ()=>{
-  document.getElementById('calAddForm').style.display = 'block';
+  const form = document.getElementById('calAddForm');
+  form.style.display = 'block';
+  requestAnimationFrame(()=> form.scrollIntoView({behavior:'smooth', block:'center'}));
 });
 document.getElementById('calFormCancel').addEventListener('click', ()=>{
   document.getElementById('calAddForm').style.display = 'none';
+  scrollCalendarTop();
 });
 document.getElementById('calFormRepeat').addEventListener('change', (e)=>{
   document.getElementById('calFormUntilWrap').style.display = e.target.value ? 'block' : 'none';
@@ -2440,6 +2450,7 @@ document.getElementById('calFormSave').addEventListener('click', ()=>{
   document.getElementById('calAddForm').style.display = 'none';
   renderPersonalList();
   renderCalendarGrid();
+  scrollCalendarTop();
 });
 document.getElementById('calPersonalList').addEventListener('click', (e)=>{
   const btn = e.target.closest('.cal-del-btn');
@@ -2478,10 +2489,7 @@ document.getElementById('tabs').addEventListener('click', (e)=>{
       tabsEl.scrollTo({left: btnRight - tabsEl.clientWidth, behavior:'smooth'});
     }
   }
-  if(btn.dataset.tab === 'calendar'){
-    const target = document.getElementById('calSelectedDayTitle');
-    if(target){ target.scrollIntoView({behavior:'smooth', block:'start'}); }
-  }
+  if(btn.dataset.tab === 'calendar'){ window.scrollTo(0, 0); }
 });
 
 // ---------- TAB BAR SCROLL ARROWS ----------
